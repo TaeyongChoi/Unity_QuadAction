@@ -1,15 +1,18 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Player : MonoBehaviour
 {
     public float speed;
+    public GameObject[] weapons;
+    public bool[] hasWeapons;
     float hAxis;
     float vAxis;
    
     bool wDown;
     bool jDown;
+    bool iDown;
 
     bool IsJump;
     bool IsDodge;
@@ -18,8 +21,9 @@ public class Player : MonoBehaviour
     Vector3 dodgeVec;
 
     Rigidbody rigid;
-
     Animator anim;
+
+    GameObject nearObject;
 
     private void Awake()
     {
@@ -34,6 +38,7 @@ public class Player : MonoBehaviour
         Turn();
         Jump();
         Dodge();
+        Interaction();
     }
 
     void GetInput()
@@ -46,6 +51,7 @@ public class Player : MonoBehaviour
         vAxis = Input.GetAxisRaw("Vertical");
         wDown = Input.GetButton("Walk");
         jDown = Input.GetButtonDown("Jump");//누르자마자 즉시
+        iDown = Input.GetButtonDown("Interaction");
     }
 
     void Move()
@@ -96,6 +102,21 @@ public class Player : MonoBehaviour
         IsDodge = false;
     }
 
+    void Interaction()
+    {
+        if(iDown && nearObject != null && !IsJump && !IsDodge)
+        {
+            if(nearObject.tag == "Weapon")
+            {
+                Item item = nearObject.GetComponent<Item>();
+                int weaponIndex = item.value;
+                hasWeapons[weaponIndex] = true;
+
+                Destroy(nearObject);
+            }
+        }
+    }
+
     void OnCollisionEnter(Collision collision)
     {
         if(collision.gameObject.tag == "Floor")
@@ -103,6 +124,20 @@ public class Player : MonoBehaviour
             anim.SetBool("IsJump", false);
             IsJump = false;
         }
+    }
+
+    void OnTriggerStay(Collider other)
+    {
+        if (other.tag == "Weapon")
+            nearObject = other.gameObject;
+
+        
+    }
+
+    void OnTriggerExit(Collider other)
+    {
+        if (other.tag == "Weapon")
+            nearObject = null;
     }
 
 }
