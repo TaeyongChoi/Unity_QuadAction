@@ -24,6 +24,7 @@ public class Player : MonoBehaviour
    
     bool wDown;
     bool jDown;
+    bool fDown;
     bool iDown;
     bool sDown1;
     bool sDown2;
@@ -32,6 +33,7 @@ public class Player : MonoBehaviour
     bool isJump;
     bool isDodge;
     bool isSwap;
+    bool isFireReady;
 
     Vector3 moveVec;
     Vector3 dodgeVec;
@@ -40,8 +42,9 @@ public class Player : MonoBehaviour
     Animator anim;
 
     GameObject nearObject;
-    GameObject equipWeapon;
+    Weapon equipWeapon;
     int equipWeaponIndex = -1;
+    float fireDelay;
 
     private void Awake()
     {
@@ -55,6 +58,7 @@ public class Player : MonoBehaviour
         Move();
         Turn();
         Jump();
+        Attack();
         Dodge();
         Swap();
         Interaction();
@@ -70,6 +74,7 @@ public class Player : MonoBehaviour
         vAxis = Input.GetAxisRaw("Vertical");
         wDown = Input.GetButton("Walk");
         jDown = Input.GetButtonDown("Jump");//누르자마자 즉시
+        fDown = Input.GetButtonDown("Fire1");
         iDown = Input.GetButtonDown("Interaction");
         sDown1 = Input.GetButtonDown("Swap1");
         sDown2 = Input.GetButtonDown("Swap2");
@@ -107,6 +112,21 @@ public class Player : MonoBehaviour
         }
     }
 
+    void Attack()
+    {
+        if(equipWeapon == null) { return; }
+
+        fireDelay += Time.deltaTime;
+        isFireReady = equipWeapon.rate < fireDelay;
+
+        if(fDown && isFireReady && !isDodge && !isSwap)
+        {
+            equipWeapon.Use();
+            anim.SetTrigger("doSwing");
+            fireDelay = 0;
+        }
+    }
+
     void Dodge()
     {
         if (jDown && moveVec != Vector3.zero && !isJump && !isDodge && !isSwap)
@@ -140,10 +160,10 @@ public class Player : MonoBehaviour
 
         if ((sDown1 || sDown2 || sDown3) && !isJump && !isDodge)
         {
-            if(equipWeapon != null) { equipWeapon.SetActive(false); }
+            if(equipWeapon != null) { equipWeapon.gameObject.SetActive(false); }
 
             equipWeaponIndex = weaponIndex;
-            equipWeapon = weapons[weaponIndex];
+            equipWeapon = weapons[weaponIndex].GetComponent<Weapon>();
             weapons[weaponIndex].SetActive(true);
 
             anim.SetTrigger("doSwap");
@@ -203,6 +223,7 @@ public class Player : MonoBehaviour
                     if (health > maxHealth) health = maxHealth;
                     break;
                 case Item.Type.Grenade:
+                    grenades[hasGrenades].SetActive(true);
                     hasGrenades += item.value;
                     if (hasGrenades > maxHasGrenades) hasGrenades = maxHasGrenades;
                     break;
