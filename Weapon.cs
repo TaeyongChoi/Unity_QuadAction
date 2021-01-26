@@ -34,11 +34,11 @@ public class Weapon : MonoBehaviour
     }
 
     /* 
-     * ì¼ë°˜ í•¨ìˆ˜
-     * Use() ë©”ì¸ ë£¨í‹´-> Swing() ì„œë¸Œë£¨í‹´ -> Use() ë©”ì¸ ë£¨í‹´ (êµì°¨ì‹¤í–‰)
-     * ì½”ë£¨í‹´ í•¨ìˆ˜
-     * Use() ë©”ì¸ ë£¨í‹´ + Swing() ì½”ë£¨í‹´(IEnumerator)
-     * yeild í‚¤ì›Œë“œë¥¼ ì—¬ëŸ¬ ê°œ ì‚¬ìš©í•˜ì—¬ ì‹œê°„ì°¨ ë¡œì§ ìž‘ì„± ê°€ëŠ¥ 
+     * ÀÏ¹Ý ÇÔ¼ö
+     * Use() ¸ÞÀÎ ·çÆ¾-> Swing() ¼­ºê·çÆ¾ -> Use() ¸ÞÀÎ ·çÆ¾ (±³Â÷½ÇÇà)
+     * ÄÚ·çÆ¾ ÇÔ¼ö
+     * Use() ¸ÞÀÎ ·çÆ¾ + Swing() ÄÚ·çÆ¾(IEnumerator)
+     * yeild Å°¿öµå¸¦ ¿©·¯ °³ »ç¿ëÇÏ¿© ½Ã°£Â÷ ·ÎÁ÷ ÀÛ¼º °¡´É 
      */
 
     IEnumerator Swing()
@@ -56,14 +56,14 @@ public class Weapon : MonoBehaviour
 
     IEnumerator Shot()
     {
-        //bullet ë°œì‚¬
+        //bullet ¹ß»ç
         GameObject intantBullet = Instantiate(bullet, bulletPos.position, bulletPos.rotation);
         Rigidbody bulletRigid = intantBullet.GetComponent<Rigidbody>();
         bulletRigid.velocity = bulletPos.forward * 50;
         
         yield return null;
 
-        //bullet case ë°°ì¶œ
+        //bullet case ¹èÃâ
         GameObject intantCase = Instantiate(bulletCase, bulletCasePos.position, bulletCasePos.rotation);
         Rigidbody caseRigid = intantCase.GetComponent<Rigidbody>();
         Vector3 caseVec = bulletCasePos.forward * Random.Range(-3, -2) + Vector3.up * Random.Range(2, 3);

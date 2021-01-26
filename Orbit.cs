@@ -8,14 +8,12 @@ public class Orbit : MonoBehaviour
     public float orbitspeed;
     Vector3 offset;
 
-    // Start is called before the first frame update
     void Start()
     {
         offset = transform.position - target.position;
         //RotateAround()는 목표가 움직이면 일그러지는 단점이있음
     }
 
-    // Update is called once per frame
     void Update()
     {
         transform.position = target.position + offset;
