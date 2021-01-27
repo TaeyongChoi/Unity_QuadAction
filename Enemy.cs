@@ -15,7 +15,7 @@ public class Enemy : MonoBehaviour
     {
         rigid = GetComponent<Rigidbody>();
         boxCollider = GetComponent<BoxCollider>();
-        mat = GetComponent<MeshRenderer>().material;// Material은 바로 못가 져온다
+        mat = GetComponent<MeshRenderer>().material;// Material은 바로 못 가져온다
     }
 
     void OnTriggerEnter(Collider other) // Collider에 is Trigger 체크(상호작용 (하는 / 받는) 둘다)
@@ -24,20 +24,42 @@ public class Enemy : MonoBehaviour
         {
             Weapon weapon = other.GetComponent<Weapon>();
             curHealth -= weapon.damage;
-            StartCoroutine(OnDamage());
+            Vector3 reactVec = transform.position - other.transform.position;
+
+
+            StartCoroutine(OnDamage(reactVec));
         }
         else if(other.tag == "Bullet")
         {
             Bullet bullet = other.GetComponent<Bullet>();
             curHealth -= bullet.damage;
-            StartCoroutine(OnDamage());
+            Vector3 reactVec = transform.position - other.transform.position;
+            Destroy(other.gameObject);
+
+            StartCoroutine(OnDamage(reactVec));
         }
     }
 
-    IEnumerator OnDamage()
+    IEnumerator OnDamage(Vector3 reactVec)
     {
         mat.color = Color.red;
         yield return new WaitForSeconds(0.1f);
+
+        if(curHealth > 0)
+        {
+            mat.color = Color.white;
+        }
+        else
+        {
+            mat.color = Color.gray;
+            gameObject.layer = 14;
+
+            reactVec = reactVec.normalized;
+            reactVec += Vector3.up;
+            rigid.AddForce(reactVec * 5, ForceMode.Impulse);
+
+            Destroy(gameObject,4);
+        }
     }
     
 }
