@@ -1,23 +1,59 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class Enemy : MonoBehaviour
 {
     public int maxHealth;
     public int curHealth;
+    public Transform target;
+    public bool isChase;
 
     Rigidbody rigid;
     BoxCollider boxCollider;
     Material mat;
+    NavMeshAgent nav;
+    Animator anim;
 
     void Awake()
     {
         rigid = GetComponent<Rigidbody>();
         boxCollider = GetComponent<BoxCollider>();
-        mat = GetComponent<MeshRenderer>().material;// Material은 바로 못 가져온다
+        mat = GetComponentInChildren<MeshRenderer>().material;
+        // 1.Material은 바로 못 가져온다 2. TestEnemy와 다르게 MeshRenderer자식에 있기때문에 GetComponentInChildren를 쓴다
+        nav = GetComponent<NavMeshAgent>();
+        anim = GetComponentInChildren<Animator>();
+
+        Invoke("ChaseStart", 2);
     }
 
+    void ChaseStart()
+    {
+        isChase = true;
+        anim.SetBool("isWalk", true);
+    }
+
+    void Update()
+    {
+        if (isChase)
+        {
+            nav.SetDestination(target.position);
+        }
+    }
+    void FreezeVelocity()
+    {
+        if (isChase)
+        {
+            rigid.velocity = Vector3.zero;
+            rigid.angularVelocity = Vector3.zero;
+        }
+    }
+
+    void FixedUpdate()
+    {
+        FreezeVelocity();
+    }
     void OnTriggerEnter(Collider other) // Collider에 is Trigger 체크(상호작용 (하는 / 받는) 둘다)
     {
         if(other.tag == "Melee")
@@ -60,7 +96,10 @@ public class Enemy : MonoBehaviour
         {
             mat.color = Color.gray;
             gameObject.layer = 14;
-
+            isChase = false;
+            nav.enabled = false; // Y축이 고정되므로 사망 리액션을 위해 navAgent 비활성화
+            anim.SetTrigger("doDie");
+            
             if (IsGrenade)
             {
                 reactVec = reactVec.normalized;

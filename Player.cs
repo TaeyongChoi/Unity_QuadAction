@@ -163,8 +163,6 @@ public class Player : MonoBehaviour
                 grenades[hasGrenades].SetActive(false);
             }
         }
-
-
     }
 
     void Attack()
