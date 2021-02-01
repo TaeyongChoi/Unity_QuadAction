@@ -5,6 +5,9 @@ using UnityEngine.AI;
 
 public class Enemy : MonoBehaviour
 {
+    public enum Type { A, B, C};
+    public Type enemyType;
+
     public int maxHealth;
     public int curHealth;
     public Transform target;
@@ -55,8 +58,27 @@ public class Enemy : MonoBehaviour
 
     void Targeting()
     {
-        float targetRadious = 1.5f;
-        float targetRange = 3f;
+        float targetRadious = 0;
+        float targetRange = 0;
+
+        switch (enemyType)
+        {
+            case Type.A:
+                targetRadious = 1.5f;
+                targetRange = 3f;
+                break;
+
+            case Type.B:
+                targetRadious = 1f;
+                targetRange = 12f;
+                break;
+            
+            case Type.C:
+                targetRadious = 1.5f;
+                targetRange = 3f;
+                break;
+
+        }
 
         RaycastHit[] rayHits = Physics.SphereCastAll(transform.position, targetRadious, transform.forward, targetRange, LayerMask.GetMask("Player"));
 
@@ -72,13 +94,34 @@ public class Enemy : MonoBehaviour
         isAttack = true;
         anim.SetBool("isAttack", true);
 
-        yield return new WaitForSeconds(0.2f);
-        meleeArea.enabled = true;
+        switch (enemyType)
+        {
+            case Type.A:
+                yield return new WaitForSeconds(0.2f);
+                meleeArea.enabled = true;
 
-        yield return new WaitForSeconds(1f);
-        meleeArea.enabled = false;
+                yield return new WaitForSeconds(1f);
+                meleeArea.enabled = false;
 
-        yield return new WaitForSeconds(1f);
+                yield return new WaitForSeconds(1f);
+                break;
+
+            case Type.B:
+                yield return new WaitForSeconds(0.1f);
+                rigid.AddForce(transform.forward * 20, ForceMode.Impulse);
+                meleeArea.enabled = true;
+
+                yield return new WaitForSeconds(0.5f);
+                rigid.velocity = Vector3.zero;
+                meleeArea.enabled = false;
+
+                yield return new WaitForSeconds(2f);
+                break;
+
+            case Type.C:
+                
+                break;
+        }
 
         isChase = true;
         isAttack = false;
