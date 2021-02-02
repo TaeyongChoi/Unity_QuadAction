@@ -5,19 +5,20 @@ using UnityEngine.AI;
 
 public class Enemy : MonoBehaviour
 {
-    public enum Type { A, B, C};
+    public enum Type { A, B, C, D };
     public Type enemyType;
 
     public int maxHealth;
     public int curHealth;
     public Transform target;
     public BoxCollider meleeArea;
+    public GameObject bullet;
     public bool isChase;
     public bool isAttack;
 
     Rigidbody rigid;
     BoxCollider boxCollider;
-    Material mat;
+    MeshRenderer[] meshs;
     NavMeshAgent nav;
     Animator anim;
 
@@ -25,12 +26,12 @@ public class Enemy : MonoBehaviour
     {
         rigid = GetComponent<Rigidbody>();
         boxCollider = GetComponent<BoxCollider>();
-        mat = GetComponentInChildren<MeshRenderer>().material;
+        meshs = GetComponentsInChildren<MeshRenderer>();
         // 1.Material은 바로 못 가져온다 2. TestEnemy와 다르게 MeshRenderer자식에 있기때문에 GetComponentInChildren를 쓴다
         nav = GetComponent<NavMeshAgent>();
         anim = GetComponentInChildren<Animator>();
 
-        Invoke("ChaseStart", 2);
+        if(enemyType != Type.D) { Invoke("ChaseStart", 2); }
     }
 
     void ChaseStart()
@@ -41,7 +42,7 @@ public class Enemy : MonoBehaviour
 
     void Update()
     {
-        if (nav.enabled)
+        if (nav.enabled && enemyType != Type.D)
         {
             nav.SetDestination(target.position);
             nav.isStopped = !isChase;
@@ -58,33 +59,35 @@ public class Enemy : MonoBehaviour
 
     void Targeting()
     {
-        float targetRadious = 0;
-        float targetRange = 0;
-
-        switch (enemyType)
+        if (enemyType != Type.D)
         {
-            case Type.A:
-                targetRadious = 1.5f;
-                targetRange = 3f;
-                break;
+            float targetRadious = 0;
+            float targetRange = 0;
 
-            case Type.B:
-                targetRadious = 1f;
-                targetRange = 12f;
-                break;
-            
-            case Type.C:
-                targetRadious = 1.5f;
-                targetRange = 3f;
-                break;
+            switch (enemyType)
+            {
+                case Type.A:
+                    targetRadious = 1.5f;
+                    targetRange = 3f;
+                    break;
 
-        }
+                case Type.B:
+                    targetRadious = 1f;
+                    targetRange = 12f;
+                    break;
 
-        RaycastHit[] rayHits = Physics.SphereCastAll(transform.position, targetRadious, transform.forward, targetRange, LayerMask.GetMask("Player"));
+                case Type.C:
+                    targetRadious = 0.5f;
+                    targetRange = 25f;
+                    break;
+            }
 
-        if(rayHits.Length > 0 && !isAttack)
-        {
-            StartCoroutine(Attack());
+            RaycastHit[] rayHits = Physics.SphereCastAll(transform.position, targetRadious, transform.forward, targetRange, LayerMask.GetMask("Player"));
+
+            if (rayHits.Length > 0 && !isAttack)
+            {
+                StartCoroutine(Attack());
+            }
         }
     }
 
@@ -119,7 +122,12 @@ public class Enemy : MonoBehaviour
                 break;
 
             case Type.C:
-                
+                yield return new WaitForSeconds(0.5f);
+                GameObject instantBullet = Instantiate(bullet, transform.position, transform.rotation);
+                Rigidbody rigidBullet = instantBullet.GetComponent<Rigidbody>();
+                rigidBullet.velocity = transform.forward * 20;
+
+                yield return new WaitForSeconds(2f);
                 break;
         }
 
@@ -165,21 +173,26 @@ public class Enemy : MonoBehaviour
 
     IEnumerator OnDamage(Vector3 reactVec, bool IsGrenade)
     {
-        mat.color = Color.red;
+        foreach(MeshRenderer mesh in meshs)
+            mesh.material.color = Color.red; 
+
         yield return new WaitForSeconds(0.1f);
 
-        if(curHealth > 0)
+        if (curHealth > 0)
         {
-            mat.color = Color.white;
+            foreach (MeshRenderer mesh in meshs)
+                mesh.material.color = Color.white;
         }
         else
         {
-            mat.color = Color.gray;
+            foreach (MeshRenderer mesh in meshs)
+                mesh.material.color = Color.gray;
+
             gameObject.layer = 14;
             isChase = false;
             nav.enabled = false; // Y축이 고정되므로 사망 리액션을 위해 navAgent 비활성화
             anim.SetTrigger("doDie");
-            
+
             if (IsGrenade)
             {
                 reactVec = reactVec.normalized;
@@ -187,7 +200,7 @@ public class Enemy : MonoBehaviour
 
                 rigid.freezeRotation = false;
                 rigid.AddForce(reactVec * 5, ForceMode.Impulse);
-                rigid.AddTorque(reactVec *15, ForceMode.Impulse);
+                rigid.AddTorque(reactVec * 15, ForceMode.Impulse);
             }
             else
             {
@@ -195,8 +208,7 @@ public class Enemy : MonoBehaviour
                 reactVec += Vector3.up;
                 rigid.AddForce(reactVec * 5, ForceMode.Impulse);
             }
-
-            Destroy(gameObject,4);
+            if (enemyType != Type.D) { Destroy(gameObject, 4); }
         }
     }
     
