@@ -15,12 +15,13 @@ public class Enemy : MonoBehaviour
     public GameObject bullet;
     public bool isChase;
     public bool isAttack;
+    public bool isDead;
 
-    Rigidbody rigid;
-    BoxCollider boxCollider;
-    MeshRenderer[] meshs;
-    NavMeshAgent nav;
-    Animator anim;
+    public Rigidbody rigid;
+    public BoxCollider boxCollider;
+    public MeshRenderer[] meshs;
+    public NavMeshAgent nav;
+    public Animator anim;
 
     void Awake()
     {
@@ -31,7 +32,8 @@ public class Enemy : MonoBehaviour
         nav = GetComponent<NavMeshAgent>();
         anim = GetComponentInChildren<Animator>();
 
-        if(enemyType != Type.D) { Invoke("ChaseStart", 2); }
+        if(enemyType != Type.D)
+            Invoke("ChaseStart", 2);
     }
 
     void ChaseStart()
@@ -59,7 +61,7 @@ public class Enemy : MonoBehaviour
 
     void Targeting()
     {
-        if (enemyType != Type.D)
+        if (!isDead && enemyType != Type.D)
         {
             float targetRadious = 0;
             float targetRange = 0;
@@ -189,6 +191,7 @@ public class Enemy : MonoBehaviour
                 mesh.material.color = Color.gray;
 
             gameObject.layer = 14;
+            isDead = true;
             isChase = false;
             nav.enabled = false; // Y축이 고정되므로 사망 리액션을 위해 navAgent 비활성화
             anim.SetTrigger("doDie");
