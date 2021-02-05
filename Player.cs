@@ -42,6 +42,7 @@ public class Player : MonoBehaviour
     bool isFireReady = true;
     bool isBorder;
     bool isDamage;
+    bool isShop;
 
     Vector3 moveVec;
     Vector3 dodgeVec;
@@ -148,7 +149,7 @@ public class Player : MonoBehaviour
     {
         if(hasGrenades == 0) { return; }
 
-        if(gDown && !isReload && !isSwap) 
+        if(gDown && !isReload && !isSwap && !isShop) 
         {
             Ray ray = followCamera.ScreenPointToRay(Input.mousePosition);
             RaycastHit rayHit;
@@ -175,7 +176,7 @@ public class Player : MonoBehaviour
         fireDelay += Time.deltaTime;
         isFireReady = equipWeapon.rate < fireDelay;
 
-        if(fDown && isFireReady && !isDodge && !isSwap && !isReload)
+        if(fDown && isFireReady && !isDodge && !isSwap && !isReload && !isShop)
         {
             equipWeapon.Use();
             anim.SetTrigger(equipWeapon.type == Weapon.Type.Melee ? "doSwing" : "doShot");
@@ -188,7 +189,7 @@ public class Player : MonoBehaviour
         if (equipWeapon == null) { return; }
         if (equipWeapon.type == Weapon.Type.Melee) { return; }
         if (ammo == 0) { return; }
-        if (rDown && !isJump && !isDodge && !isSwap && isFireReady)
+        if (rDown && !isJump && !isDodge && !isSwap && isFireReady && !isShop)
         {
             anim.SetTrigger("doReload");
             isReload = true;
@@ -274,6 +275,7 @@ public class Player : MonoBehaviour
             {
                 Shop shop = nearObject.GetComponent<Shop>();
                 shop.Enter(this);
+                isShop = true;
             }
         }
         
@@ -388,6 +390,7 @@ public class Player : MonoBehaviour
         {
             Shop shop = nearObject.GetComponent<Shop>();
             shop.Exit();
+            isShop = false;
             nearObject = null;
         }
     }
