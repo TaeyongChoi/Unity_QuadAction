@@ -12,6 +12,9 @@ public class Player : MonoBehaviour
     public GameObject grenadeObj;
 
     public Camera followCamera;
+    public GameManager manager;
+
+    public AudioSource MeleeSound;
 
     public int ammo;
     public int coin;
@@ -44,6 +47,7 @@ public class Player : MonoBehaviour
     bool isBorder;
     bool isDamage;
     bool isShop;
+    bool isDead;
 
     Vector3 moveVec;
     Vector3 dodgeVec;
@@ -62,6 +66,7 @@ public class Player : MonoBehaviour
         rigid = GetComponent<Rigidbody>();
         anim = GetComponentInChildren<Animator>();
         meshs = GetComponentsInChildren<MeshRenderer>();
+        MeleeSound = GetComponentInChildren<AudioSource>();
 
         Debug.Log(PlayerPrefs.GetInt("MaxScore"));
         //PlayerPrefs.SetInt("MaxScore",112500);
@@ -92,7 +97,7 @@ public class Player : MonoBehaviour
         wDown = Input.GetButton("Walk");
         jDown = Input.GetButtonDown("Jump");//누르자마자 즉시
         fDown = Input.GetButton("Fire1");
-        gDown = Input.GetButton("Fire2");
+        gDown = Input.GetButtonDown("Fire2");
         rDown = Input.GetButtonDown("Reload");
         iDown = Input.GetButtonDown("Interaction");
         sDown1 = Input.GetButtonDown("Swap1");
@@ -104,17 +109,15 @@ public class Player : MonoBehaviour
     {
         moveVec = new Vector3(hAxis, 0, vAxis).normalized;
 
-        if (isDodge) { moveVec = dodgeVec; }
+        if (isDodge)
+            moveVec = dodgeVec;
         
-        if (isSwap || isReload || !isFireReady) { moveVec = Vector3.zero; }
+        if (isSwap || isReload || !isFireReady || isDead) 
+            moveVec = Vector3.zero;
 
-        if (!isBorder)
-        {
-            //걸을때 속력 조절, 벽 무시 버그 수정
+        if (!isBorder) // 걸을때 속력 조절, 벽 무시 버그 수정
             transform.position += moveVec * speed * (wDown ? 0.3f : 1f) * Time.deltaTime;
-        }
-
-
+        
         anim.SetBool("isRun", moveVec != Vector3.zero);
         anim.SetBool("isWalk", wDown);
     }
@@ -125,7 +128,7 @@ public class Player : MonoBehaviour
         transform.LookAt(transform.position + moveVec);
 
         //마우스에 의한 회전
-        if (fDown)
+        if (fDown && !isDead)
         {
             Ray ray = followCamera.ScreenPointToRay(Input.mousePosition);
             RaycastHit rayHit;
@@ -140,7 +143,7 @@ public class Player : MonoBehaviour
 
     void Jump()
     {
-        if (jDown && moveVec == Vector3.zero && !isJump && !isDodge && !isSwap)
+        if (jDown && moveVec == Vector3.zero && !isJump && !isDodge && !isSwap && !isDead && !isDead)
         {
             rigid.AddForce(Vector3.up * 15,ForceMode.Impulse);
             anim.SetBool("isJump", true);
@@ -153,7 +156,7 @@ public class Player : MonoBehaviour
     {
         if(hasGrenades == 0) { return; }
 
-        if(gDown && !isReload && !isSwap && !isShop) 
+        if(gDown && !isReload && !isSwap && !isShop && !isDead) 
         {
             Ray ray = followCamera.ScreenPointToRay(Input.mousePosition);
             RaycastHit rayHit;
@@ -180,11 +183,23 @@ public class Player : MonoBehaviour
         fireDelay += Time.deltaTime;
         isFireReady = equipWeapon.rate < fireDelay;
 
-        if(fDown && isFireReady && !isDodge && !isSwap && !isReload && !isShop)
+        if(fDown && isFireReady && !isDodge && !isSwap && !isReload && !isShop && !isDead)
         {
             equipWeapon.Use();
             anim.SetTrigger(equipWeapon.type == Weapon.Type.Melee ? "doSwing" : "doShot");
             fireDelay = 0;
+
+            switch (equipWeapon.type) 
+            {
+                case Weapon.Type.Melee:
+
+                    MeleeSound.PlayDelayed(0.3f);
+                    break;
+                case Weapon.Type.Range:
+
+                    break;
+            }
+                
         }
     }
 
@@ -193,7 +208,7 @@ public class Player : MonoBehaviour
         if (equipWeapon == null) { return; }
         if (equipWeapon.type == Weapon.Type.Melee) { return; }
         if (ammo == 0) { return; }
-        if (rDown && !isJump && !isDodge && !isSwap && isFireReady && !isShop)
+        if (rDown && !isJump && !isDodge && !isSwap && isFireReady && !isShop && !isDead)
         {
             anim.SetTrigger("doReload");
             isReload = true;
@@ -213,7 +228,7 @@ public class Player : MonoBehaviour
 
     void Dodge()
     {
-        if (jDown && moveVec != Vector3.zero && !isJump && !isDodge && !isSwap)
+        if (jDown && moveVec != Vector3.zero && !isJump && !isDodge && !isSwap && !isDead)
         {
             dodgeVec = moveVec;
             speed *= 2;
@@ -242,7 +257,7 @@ public class Player : MonoBehaviour
         if (sDown2) weaponIndex = 1;
         if (sDown3) weaponIndex = 2;
 
-        if ((sDown1 || sDown2 || sDown3) && !isJump && !isDodge)
+        if ((sDown1 || sDown2 || sDown3) && !isJump && !isDodge && !isDead)
         {
             if(equipWeapon != null) { equipWeapon.gameObject.SetActive(false); }
 
@@ -265,7 +280,7 @@ public class Player : MonoBehaviour
 
     void Interaction()
     {
-        if(iDown && nearObject != null && !isJump && !isDodge)
+        if(iDown && nearObject != null && !isJump && !isDodge && !isDead)
         {
             if(nearObject.tag == "Weapon")
             {
@@ -280,6 +295,10 @@ public class Player : MonoBehaviour
                 Shop shop = nearObject.GetComponent<Shop>();
                 shop.Enter(this);
                 isShop = true;
+            }
+            else if (nearObject.tag == "StartZone")
+            {
+                manager.StageStart();
             }
         }
         
@@ -314,9 +333,12 @@ public class Player : MonoBehaviour
                     if (health > maxHealth) health = maxHealth;
                     break;
                 case Item.Type.Grenade:
-                    grenades[hasGrenades].SetActive(true);
-                    hasGrenades += item.value;
-                    if (hasGrenades > maxHasGrenades) hasGrenades = maxHasGrenades;
+                    if(hasGrenades < 4) {
+                        grenades[hasGrenades].SetActive(true);
+                        hasGrenades += item.value;
+                        if (hasGrenades > maxHasGrenades)
+                            hasGrenades = maxHasGrenades;
+                    }
                     break;
             }
             Destroy(other.gameObject);
@@ -346,7 +368,11 @@ public class Player : MonoBehaviour
 
         if (isBossAtk)
             rigid.AddForce(transform.forward * -25, ForceMode.Impulse);
-        
+
+
+        if (health <= 0 && !isDead)
+            OnDie();
+
         yield return new WaitForSeconds(1f);
         
         isDamage = false;
@@ -358,6 +384,14 @@ public class Player : MonoBehaviour
         if (isBossAtk)
             rigid.velocity = Vector3.zero;
     }
+
+    void OnDie() 
+    {
+        anim.SetTrigger("doDie");
+        isDead = true;
+        manager.GameOver();
+    }
+
 
     void FreezeRotation()
     {
@@ -380,9 +414,10 @@ public class Player : MonoBehaviour
 
     void OnTriggerStay(Collider other)
     {
-        if (other.tag == "Weapon" || other.tag == "Shop")
+        if (other.tag == "Weapon" || other.tag == "Shop" || other.tag == "StartZone") 
+        { 
             nearObject = other.gameObject;
-
+        }
         
     }
 
@@ -397,6 +432,8 @@ public class Player : MonoBehaviour
             isShop = false;
             nearObject = null;
         }
+        else if (other.tag == "StartZone")
+            nearObject = null;
     }
 
 }
