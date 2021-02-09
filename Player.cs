@@ -74,10 +74,10 @@ public class Player : MonoBehaviour
    
     void Update()
     {
+        //Jump();
         GetInput();
         Move();
         Turn();
-        Jump();
         Grenade();
         Attack();
         Reload();

@@ -13,6 +13,7 @@ public class GameManager : MonoBehaviour
     public GameObject itemShop;
     public GameObject weaponShop;
     public GameObject startZone;
+    public GameObject EndZone;
     public int stage;
     public float playTime;
     public bool isBattle;
@@ -108,13 +109,16 @@ public class GameManager : MonoBehaviour
 
         itemShop.SetActive(true);
         weaponShop.SetActive(true);
-        startZone.SetActive(true);
+        if(stage == 5)
+            startZone.SetActive(true);
+        else
 
         foreach (Transform zone in enemyZones)
             zone.gameObject.SetActive(false);
 
         isBattle = false;
         stage++;
+       
     }
 
     IEnumerator InBattle()
@@ -219,7 +223,7 @@ public class GameManager : MonoBehaviour
         if(stage % 5 == 0)
         {
             bossHealthGroup.anchoredPosition = Vector3.down * 30;
-            bossHealthBar.localScale = new Vector3(boss.curHealth > 0 ? (float)boss.curHealth / boss.maxHealth : 0, 1, 1);
+            bossHealthBar.localScale = new Vector3(boss.curHealth >= 0 ? (float)boss.curHealth / boss.maxHealth : 0, 1, 1);
         }
         else
         {
