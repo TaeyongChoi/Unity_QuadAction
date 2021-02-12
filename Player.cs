@@ -15,6 +15,7 @@ public class Player : MonoBehaviour
     public GameManager manager;
 
     public AudioSource MeleeSound;
+    public AudioSource RangeSound;
 
     public int ammo;
     public int coin;
@@ -66,10 +67,6 @@ public class Player : MonoBehaviour
         rigid = GetComponent<Rigidbody>();
         anim = GetComponentInChildren<Animator>();
         meshs = GetComponentsInChildren<MeshRenderer>();
-        MeleeSound = GetComponentInChildren<AudioSource>();
-
-        Debug.Log(PlayerPrefs.GetInt("MaxScore"));
-        //PlayerPrefs.SetInt("MaxScore",112500);
     }
    
     void Update()
@@ -192,11 +189,10 @@ public class Player : MonoBehaviour
             switch (equipWeapon.type) 
             {
                 case Weapon.Type.Melee:
-
                     MeleeSound.PlayDelayed(0.3f);
                     break;
                 case Weapon.Type.Range:
-
+                    RangeSound.Play();
                     break;
             }
                 

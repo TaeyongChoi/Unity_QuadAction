@@ -9,6 +9,6 @@ public class StartZone : MonoBehaviour
     void OnTriggerEnter(Collider other)
     {
         if (other.gameObject.tag == "Player")
-            manager.StageStart();
+            manager.GameOver();
     }
 }

@@ -106,13 +106,17 @@ public class GameManager : MonoBehaviour
     public void StageEnd()
     {
         player.transform.position = Vector3.up * 0.8f;
-
-        itemShop.SetActive(true);
-        weaponShop.SetActive(true);
-        if(stage == 5)
-            startZone.SetActive(true);
+        if (stage == 5)
+        {
+            EndZone.SetActive(true);
+        }
         else
-
+        {
+            itemShop.SetActive(true);
+            weaponShop.SetActive(true);
+            startZone.SetActive(true);
+        }
+            
         foreach (Transform zone in enemyZones)
             zone.gameObject.SetActive(false);
 
@@ -123,19 +127,9 @@ public class GameManager : MonoBehaviour
 
     IEnumerator InBattle()
     {
-        if (stage % 5 == 0)
+        if (stage == 1)
         {
-            enemyCntD++;
-            GameObject instantEnemy = Instantiate(enemies[3], enemyZones[0].position, enemyZones[0].rotation);
-            Enemy enemy = instantEnemy.GetComponent<Enemy>();
-            enemy.target = player.transform;
-            enemy.manager = this;
-            boss = instantEnemy.GetComponent<Boss>();
-
-        }
-        else
-        {
-            for (int index = 0; index < stage; index++)
+            for (int index = 0; index < 2; index++)
             {
                 int ran = Random.Range(0, 3);
                 enemyList.Add(ran);
@@ -166,16 +160,125 @@ public class GameManager : MonoBehaviour
                 //while문에서 코루틴쓸때 주의
             }
         }
-
-        while(enemyCntA + enemyCntB + enemyCntC + enemyCntD > 0) 
+        else if (stage == 2)
         {
-            yield return null;
+            for (int index = 0; index < 4; index++)
+            {
+                int ran = Random.Range(0, 3);
+                enemyList.Add(ran);
+
+                switch (ran)
+                {
+                    case 0:
+                        enemyCntA++;
+                        break;
+                    case 1:
+                        enemyCntB++;
+                        break;
+                    case 2:
+                        enemyCntC++;
+                        break;
+                }
+            }
+
+            while (enemyList.Count > 0)
+            {
+                int ranZone = Random.Range(0, 4);
+                GameObject instantEnemy = Instantiate(enemies[enemyList[0]], enemyZones[ranZone].position, enemyZones[ranZone].rotation);
+                Enemy enemy = instantEnemy.GetComponent<Enemy>();
+                enemy.target = player.transform;
+                enemy.manager = this;
+                enemyList.RemoveAt(0);
+                yield return new WaitForSeconds(4f);
+                //while문에서 코루틴쓸때 주의
+            }
+        }
+        else if (stage == 3)
+        {
+            for (int index = 0; index < 6; index++)
+            {
+                int ran = Random.Range(0, 3);
+                enemyList.Add(ran);
+
+                switch (ran)
+                {
+                    case 0:
+                        enemyCntA++;
+                        break;
+                    case 1:
+                        enemyCntB++;
+                        break;
+                    case 2:
+                        enemyCntC++;
+                        break;
+                }
+            }
+
+            while (enemyList.Count > 0)
+            {
+                int ranZone = Random.Range(0, 4);
+                GameObject instantEnemy = Instantiate(enemies[enemyList[0]], enemyZones[ranZone].position, enemyZones[ranZone].rotation);
+                Enemy enemy = instantEnemy.GetComponent<Enemy>();
+                enemy.target = player.transform;
+                enemy.manager = this;
+                enemyList.RemoveAt(0);
+                yield return new WaitForSeconds(4f);
+                //while문에서 코루틴쓸때 주의
+            }
+        }
+        else if (stage == 4)
+        {
+            for (int index = 0; index < 8; index++)
+            {
+                int ran = Random.Range(0, 3);
+                enemyList.Add(ran);
+
+                switch (ran)
+                {
+                    case 0:
+                        enemyCntA++;
+                        break;
+                    case 1:
+                        enemyCntB++;
+                        break;
+                    case 2:
+                        enemyCntC++;
+                        break;
+                }
+            }
+
+            while (enemyList.Count > 0)
+            {
+                int ranZone = Random.Range(0, 4);
+                GameObject instantEnemy = Instantiate(enemies[enemyList[0]], enemyZones[ranZone].position, enemyZones[ranZone].rotation);
+                Enemy enemy = instantEnemy.GetComponent<Enemy>();
+                enemy.target = player.transform;
+                enemy.manager = this;
+                enemyList.RemoveAt(0);
+                yield return new WaitForSeconds(4f);
+                //while문에서 코루틴쓸때 주의
+            }
+        }
+        else if (stage == 5)
+        {
+            enemyCntD++;
+            GameObject instantEnemy = Instantiate(enemies[3], enemyZones[0].position, enemyZones[0].rotation);
+            Enemy enemy = instantEnemy.GetComponent<Enemy>();
+            enemy.target = player.transform;
+            enemy.manager = this;
+            boss = instantEnemy.GetComponent<Boss>();
+
         }
 
-        yield return new WaitForSeconds(4f);
-        
-        StageEnd();
-    }
+            while (enemyCntA + enemyCntB + enemyCntC + enemyCntD > 0)
+            {
+                yield return null;
+            }
+
+            yield return new WaitForSeconds(4f);
+
+            StageEnd();
+        }
 
     void Update()
     {
